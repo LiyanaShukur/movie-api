@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Database</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .movie-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f9f9f9;
+        }
+        .movie-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .add-movie {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Movie Database</h1>
+    
+    <div class="add-movie">
+        <h2>Add New Movie</h2>
+        <form id="movieForm">
+            <input type="text" id="title" placeholder="Title" required>
+            <input type="text" id="genre" placeholder="Genre">
+            <input type="number" id="year" placeholder="Year">
+            <input type="number" step="0.1" id="rating" placeholder="Rating">
+            <button type="submit">Add Movie</button>
+        </form>
+    </div>
+
+    <div id="moviesList"></div>
+
+    <script>
+        // Fetch and display movies
+        // Update the form submission handler
+document.getElementById('movieForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const newMovie = {
+        title: document.getElementById('title').value,
+        genre: document.getElementById('genre').value,
+        year: parseInt(document.getElementById('year').value),
+        rating: parseFloat(document.getElementById('rating').value)
+    };
+
+    try {
+        const response = await fetch('/add_movie', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(newMovie)
+        });
+
+        if (!response.ok) throw new Error('Failed to add movie');
+        
+        loadMovies(); // Refresh the list
+        document.getElementById('movieForm').reset();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to add movie: ' + error.message);
+    }
+});
+
+// Update the loadMovies function to handle errors
+async function loadMovies() {
+    try {
+        const response = await fetch('/api/movies');
+        if (!response.ok) throw new Error('Failed to load movies');
+        
+        const movies = await response.json();
+        const moviesList = document.getElementById('moviesList');
+        moviesList.innerHTML = '';
+        
+        movies.forEach(movie => {
+            const movieCard = document.createElement('div');
+            movieCard.className = 'movie-card';
+            movieCard.innerHTML = `
+                <h3>${movie.title} (${movie.year})</h3>
+                <p><strong>Genre:</strong> ${movie.genre}</p>
+                <p><strong>Rating:</strong> ${movie.rating}/10</p>
+                <button onclick="deleteMovie(${movie.id})">Delete</button>
+            `;
+            moviesList.appendChild(movieCard);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load movies: ' + error.message);
+    }
+}
+    </script>
+</body>
+</html>
